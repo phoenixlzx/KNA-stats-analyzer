@@ -28,27 +28,27 @@ request(options, function (error, response, body) {
         // load whole page
         var $ = cheerio.load(body);
 
-        var tableRolls = $('tbody').children();
-        for (tr in tableRolls) {
-            if (tableRolls[tr].type === 'tag') {
+        var tableRows = $('tbody').children();
+        for (tr in tableRows) {
+            if (tableRows[tr].type === 'tag') {
                 /*
-                * tableRolls[tr].children[1].attribs.title -> 發布日期
-                * tableRolls[tr].children[3] -> 新番連載..
-                * tableRolls[tr].children[5].children[0] -> 種子地址
-                * tableRolls[tr].children[5].children[1] -> 種子標題
-                * tableRolls[tr].children[7].children[0].data -> 種子大小
-                * tableRolls[tr].children[9].children[0].data -> 種子數量
-                * tableRolls[tr].children[11].children[0].data -> 下載次數
-                * tableRolls[tr].children[13].children[0].data -> 完成次數
-                * tableRolls[tr].children[15].children[0].children[0].data -> 字幕組
+                * tableRows[tr].children[1].attribs.title -> 發布日期
+                * tableRows[tr].children[3] -> 新番連載..
+                * tableRows[tr].children[5].children[0] -> 種子地址
+                * tableRows[tr].children[5].children[1] -> 種子標題
+                * tableRows[tr].children[7].children[0].data -> 種子大小
+                * tableRows[tr].children[9].children[0].data -> 種子數量
+                * tableRows[tr].children[11].children[0].data -> 下載次數
+                * tableRows[tr].children[13].children[0].data -> 完成次數
+                * tableRows[tr].children[15].children[0].children[0].data -> 字幕組
                 * */
                 // console.log(tableRolls[tr].children[5].children[1]);
 
-                // console.log(tableRolls[tr].children[13].children[0].data);
+                console.log(Object.keys(tableRows));
 
-                console.log('字幕組: ' + tableRolls[tr].children[15].children[0].children[0].data);
-                console.log('發布日期: ' + tableRolls[tr].children[1].attribs.title);
-                var titletag = tableRolls[tr].children[5].children[1];
+                console.log('字幕組: ' + tableRows[tr].children[15].children[0].children[0].data);
+                console.log('發布日期: ' + tableRows[tr].children[1].attribs.title);
+                var titletag = tableRows[tr].children[5].children[1];
 
                 title = '';
                 async.eachSeries(titletag.children, function(tmp, cb) {
@@ -65,11 +65,11 @@ request(options, function (error, response, body) {
                     console.log('種子標題: ' + title);
                 });
 
-                console.log('文件大小: ' + tableRolls[tr].children[7].children[0].data);
+                console.log('文件大小: ' + tableRows[tr].children[7].children[0].data);
 
-                console.log('種子: ' + tableRolls[tr].children[9].children[0].data +
-                        '\n下載: ' + tableRolls[tr].children[11].children[0].data +
-                        '\n完成: ' + tableRolls[tr].children[13].children[0].data);
+                console.log('種子: ' + tableRows[tr].children[9].children[0].data +
+                        '\n下載: ' + tableRows[tr].children[11].children[0].data +
+                        '\n完成: ' + tableRows[tr].children[13].children[0].data);
 
                 console.log('\n---------------------------------------------\n');
 
