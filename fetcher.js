@@ -9,6 +9,7 @@ var fs = require('fs');
 var request = require('request');
 var cheerio = require('cheerio');
 var async = require('async');
+var MongoClient = require('mongodb').MongoClient;
 
 var config = require('./config');
 
@@ -45,7 +46,7 @@ function fetchktxp() {
 
                 console.log('成功獲取數據，URL: ' + url);
 
-                parseKtxp(body, function(bangumiarray) {
+                parseKtxp(body, updateTime, function(bangumiarray) {
 
                     save(bangumiarray, function(err) {
                         if (err) {
@@ -85,7 +86,7 @@ function fetchdmhy() {
 
                 console.log('成功獲取數據，URL: ' + url);
 
-                parseDmhy(body, function(bangumiarray) {
+                parseDmhy(body, updateTime, function(bangumiarray) {
 
                     save(bangumiarray, function(err) {
                         if (err) {
@@ -158,7 +159,7 @@ function fetch(url, callback) {
 
 }
 
-function parseKtxp(body, callback) {
+function parseKtxp(body, taskTime, callback) {
 
     var bangumiarray = [];
 
@@ -203,7 +204,9 @@ function parseKtxp(body, callback) {
                     fileSize: tableRows[tr].children[7].children[0].data,
                     torrents: tableRows[tr].children[9].children[0].data,
                     downloads: tableRows[tr].children[11].children[0].data,
-                    finish: tableRows[tr].children[13].children[0].data
+                    finish: tableRows[tr].children[13].children[0].data,
+                    taskTime: taskTime,
+                    titleIndex: title.split(" ")
                 });
 
                 // Object.keys(tableRows) is an array ['0', '1', '2', ..., 'length'..] and its larger than tr amount - 1.
@@ -221,7 +224,7 @@ function parseKtxp(body, callback) {
     }
 }
 
-function parseDmhy(body, callback) {
+function parseDmhy(body, taskTime, callback) {
 
     var bangumiarray = [];
 
@@ -283,7 +286,9 @@ function parseDmhy(body, callback) {
                     fileSize: tableRows[tr].children[9].children[0].data,
                     torrents: tableRows[tr].children[11].children[0].children[0].data,
                     downloads: tableRows[tr].children[13].children[0].children[0].data,
-                    finish: tableRows[tr].children[15].children[0].data
+                    finish: tableRows[tr].children[15].children[0].data,
+                    taskTime: taskTime,
+                    titleIndex: title.split('')
                 });
 
                 if (tasks === 0) {
@@ -301,7 +306,45 @@ function parseDmhy(body, callback) {
 }
 
 function save(bangumiarray, callback) {
-    console.log(bangumiarray);
+    // console.log(bangumiarray);
     // save document array to database.
-    callback();
+
+    MongoClient.connect(config.mongodb, { db: { native_parser: true, w : 1 } }, function(err, db) {
+        if (err) {
+            throw err;
+        }
+
+        var collection = db.collection('bangumistats');
+
+        collection.insert(bangumiarray, {
+
+            safe: true
+
+        }, function(err) {
+
+            if (err) {
+
+                return callback(err);
+
+            }
+
+            collection.ensureIndex({
+                source: 1,
+                team: 1,
+                taskTime: 1,
+                titleIndex: 1
+            }, function(err) {
+
+                if (err) {
+                    return callback(err);
+                }
+
+                callback();
+
+            });
+
+        });
+
+    });
+
 }
