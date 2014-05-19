@@ -42,10 +42,10 @@ request(options, function (error, response, body) {
                 * tableRows[tr].children[13].children[0].data -> 完成次數
                 * tableRows[tr].children[15].children[0].children[0].data -> 字幕組
                 * */
-                // console.log(tableRolls[tr].children[5].children[1]);
+                // console.log(tableRows[tr].children[5].children[1]);
 
-                console.log(Object.keys(tableRows));
-
+                // console.log(Object.keys(tableRows));
+                // console.log(tableRows);
                 console.log('字幕組: ' + tableRows[tr].children[15].children[0].children[0].data);
                 console.log('發布日期: ' + tableRows[tr].children[1].attribs.title);
                 var titletag = tableRows[tr].children[5].children[1];

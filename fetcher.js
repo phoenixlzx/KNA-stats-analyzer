@@ -11,7 +11,8 @@ var cheerio = require('cheerio');
 var async = require('async');
 
 var config = require('./config');
-/*
+
+
 setInterval(function() {
 
     if (config.enable_ktxp) {
@@ -23,8 +24,7 @@ setInterval(function() {
     }
 
 }, config.fetch_interval * 60 * 1000 || 30 * 60 * 1000);
-*/
-fetchktxp();
+
 
 function fetchktxp() {
 
@@ -67,8 +67,44 @@ function fetchktxp() {
 }
 
 function fetchdmhy() {
-    // Do nothing currently..
-    console.log('Not implemented yet.');
+
+    var updateTime = new Date().getTime();
+
+    console.log('動漫花園數據更新進程觸發。當前時間: ' + new Date(updateTime));
+
+    parseUrlList('./bangumi-dmhy.list', function(err, urls) {
+        if (err) throw err;
+
+        async.each(urls, function(url, callback) {
+
+            fetch(url, function(err, body) {
+                if (err) {
+                    console.log('獲取數據出錯，錯誤響應: ' + err);
+                    return callback();
+                }
+
+                console.log('成功獲取數據，URL: ' + url);
+
+                parseDmhy(body, function(bangumiarray) {
+
+                    save(bangumiarray, function(err) {
+                        if (err) {
+                            return console.log('保存到數據庫時出錯: ' + err + '\nURL: ' + url);
+                        }
+
+                        console.log('數據保存成功，URL: ' + url);
+
+                        callback();
+                    });
+
+                });
+
+            });
+        }, function() {
+            console.log(new Date(updateTime) + ' 啓動的數據更新任務已完成。')
+        });
+    });
+
 }
 
 function parseUrlList(file, callback) {
@@ -132,13 +168,13 @@ function parseKtxp(body, callback) {
 
     var tableRows = $('tbody').children();
 
-    var tasks = 0;
+    var tasks = Object.keys(tableRows).length - 3;
 
     for (tr in tableRows) {
 
         if (tableRows[tr].type === 'tag') {
 
-            tasks++;
+            tasks--;
 
             var titletag = tableRows[tr].children[5].children[1];
 
@@ -170,15 +206,15 @@ function parseKtxp(body, callback) {
                     finish: tableRows[tr].children[13].children[0].data
                 });
 
+                // Object.keys(tableRows) is an array ['0', '1', '2', ..., 'length'..] and its larger than tr amount - 1.
+                if (tasks === 0) {
+
+                    // console.log(tasks);
+                    return callback(bangumiarray);
+
+                }
+
             });
-
-        }
-
-        // Object.keys(tableRows) is an array ['0', '1', '2', ..., 'length'..] and its larger than tr amount - 1.
-        if (tasks === Object.keys(tableRows).length - 3) {
-
-            // console.log(tasks);
-            return callback(bangumiarray);
 
         }
 
@@ -187,13 +223,85 @@ function parseKtxp(body, callback) {
 
 function parseDmhy(body, callback) {
 
+    var bangumiarray = [];
+
+    var title = '';
+
+    var $ = cheerio.load(body);
+
+    var tableRows = $('body>div>div>div.main>div.clear.table>div.clear>table>tbody').children();
+
+    var tasks = 0;
+
+    // get valid bangumi length
+    for (tr in tableRows) {
+        if (tableRows[tr].type === 'tag' && tableRows[tr].children[3].children[1].children[1].children[0].data === '動畫') {
+            tasks++;
+        }
+    }
+
+    for (tr in tableRows) {
+
+        if (tableRows[tr].type === 'tag' && tableRows[tr].children[3].children[1].children[1].children[0].data === '動畫') {
+
+            tasks--;
+
+            var team = tableRows[tr].children[5].children[1].children[1].attribs.class !== 'keyword'?
+                tableRows[tr].children[5].children[1].children[1].children[0].data.replace(/[\f\n\r\t\v]*/g, ''):'(未填寫)';
+
+            var titletag = tableRows[tr].children[5];
+
+            title = '';
+
+            async.eachSeries(titletag.children, function(tmp, cb) {
+
+                if (tmp.type === 'tag' && tmp.name === 'a') {
+
+                    tmp.children.forEach(function(child) {
+
+                        if (child.type === 'text') {
+
+                            title += child.data.replace(/[\f\n\r\t\v]*/g, '');
+
+                        } else if (child.type === 'tag' && child.name === 'span') {
+
+                            title += child.children[0].data.replace(/[\f\n\r\t\v]*/g, '');
+                        }
+                    });
+
+                }
+
+                cb();
+
+            }, function() {
+
+                bangumiarray.push({
+                    source: 'DMHY',
+                    team: team,
+                    publishDate: tableRows[tr].children[1].children[1].children[0].data,
+                    title: title,
+                    fileSize: tableRows[tr].children[9].children[0].data,
+                    torrents: tableRows[tr].children[11].children[0].children[0].data,
+                    downloads: tableRows[tr].children[13].children[0].children[0].data,
+                    finish: tableRows[tr].children[15].children[0].data
+                });
+
+                if (tasks === 0) {
+
+                    return callback(bangumiarray);
+
+                }
+
+            });
+
+        }
+
+    }
+
 }
 
 function save(bangumiarray, callback) {
-    console.log(bangumiarray.length);
+    console.log(bangumiarray);
+    // save document array to database.
     callback();
-}
-
-function parseTable(table) {
-
 }
