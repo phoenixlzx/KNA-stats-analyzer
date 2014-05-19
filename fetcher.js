@@ -175,8 +175,6 @@ function parseKtxp(body, taskTime, callback) {
 
         if (tableRows[tr].type === 'tag') {
 
-            tasks--;
-
             var titletag = tableRows[tr].children[5].children[1];
 
             title = '';
@@ -195,6 +193,8 @@ function parseKtxp(body, taskTime, callback) {
                 cb();
 
             }, function() {
+	      
+	        tasks--;
 
                 bangumiarray.push({
                     source: 'KTXP',
@@ -247,8 +247,6 @@ function parseDmhy(body, taskTime, callback) {
 
         if (tableRows[tr].type === 'tag' && tableRows[tr].children[3].children[1].children[1].children[0].data === '動畫') {
 
-            tasks--;
-
             var team = tableRows[tr].children[5].children[1].children[1].attribs.class !== 'keyword'?
                 tableRows[tr].children[5].children[1].children[1].children[0].data.replace(/[\f\n\r\t\v]*/g, ''):'(未填寫)';
 
@@ -277,6 +275,8 @@ function parseDmhy(body, taskTime, callback) {
                 cb();
 
             }, function() {
+	      
+	        tasks--;
 
                 bangumiarray.push({
                     source: 'DMHY',
