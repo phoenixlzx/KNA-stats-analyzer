@@ -26,7 +26,7 @@ MongoClient.connect(config.mongodb, { db: { native_parser: true, w : 1 } }, func
 
     collection.find({
         $all: {
-            title: query.title
+            title: query.title.split('')
         }
     }).sort({
         taskTime: 1
