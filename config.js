@@ -9,5 +9,5 @@ module.exports = {
     fetch_interval: 30,
 
     // MongoDB 數據庫地址
-    mongodb: 'mongodb://127.0.0.1:27017/stats'
+    mongodb: 'mongodb://127.0.0.1:27017/knastats'
 };

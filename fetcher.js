@@ -206,7 +206,7 @@ function parseKtxp(body, taskTime, callback) {
                     downloads: tableRows[tr].children[11].children[0].data,
                     finish: tableRows[tr].children[13].children[0].data,
                     taskTime: taskTime,
-                    titleIndex: title.split('')
+                    titleIndex: title.split('').clean(" ")
                 });
 
                 // Object.keys(tableRows) is an array ['0', '1', '2', ..., 'length'..] and its larger than tr amount - 1.
@@ -288,7 +288,7 @@ function parseDmhy(body, taskTime, callback) {
                     downloads: tableRows[tr].children[13].children[0].children[0].data,
                     finish: tableRows[tr].children[15].children[0].data,
                     taskTime: taskTime,
-                    titleIndex: title.split('')
+                    titleIndex: title.split('').clean(" ")
                 });
 
                 if (tasks === 0) {
@@ -348,3 +348,13 @@ function save(bangumiarray, callback) {
     });
 
 }
+
+Array.prototype.clean = function (deleteValue) {
+    for (var i = 0; i < this.length; i++) {
+        if (this[i] == deleteValue) {
+            this.splice(i, 1);
+            i--;
+        }
+    }
+    return this;
+};
