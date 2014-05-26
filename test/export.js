@@ -25,8 +25,8 @@ MongoClient.connect(config.mongodb, { db: { native_parser: true, w : 1 } }, func
     var collection = db.collection('bangumistats');
 
     collection.find({
-        $all: {
-            title: query.title.split('')
+        title: {
+            $all: query.title.split('')
         }
     }).sort({
         taskTime: 1
