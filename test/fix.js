@@ -28,7 +28,7 @@ MongoClient.connect(config.mongodb, { db: { native_parser: true, w : 1 } }, func
             _id: doc._id
         }, {
             $set: {
-                titleIndex: doc.titleIndex.join().replace(/,/g, ' ').split('')
+                titleIndex: doc.titleIndex.join().replace(/,/g, ' ').split('').clean(" ")
             }
         }, function(err) {
             if (err) throw err;
@@ -42,3 +42,13 @@ MongoClient.connect(config.mongodb, { db: { native_parser: true, w : 1 } }, func
     });
 
 });
+
+Array.prototype.clean = function (deleteValue) {
+    for (var i = 0; i < this.length; i++) {
+        if (this[i] == deleteValue) {
+            this.splice(i, 1);
+            i--;
+        }
+    }
+    return this;
+};

@@ -5,7 +5,7 @@
  */
 
 
-var query = '魔劣';
+var query = '魔劣720';
 
 var fs = require('fs');
 
@@ -17,7 +17,7 @@ var config = require('../config');
 
 var data = '# 数据来源\t字幕组\t发布日期\t标题\t种子\t下载\t完成\t抓取时间\n';
 
-console.log('querying for ' + query.title);
+console.log('querying for ' + query);
 
 MongoClient.connect(config.mongodb, { db: { native_parser: true, w : 1 } }, function(err, db) {
     if (err) {
@@ -34,17 +34,38 @@ MongoClient.connect(config.mongodb, { db: { native_parser: true, w : 1 } }, func
         }
     }).toArray(function(err, docs) {
         if (err) throw err;
+        var i = 0;
         async.eachSeries(docs, function(doc, cb) {
-            console.log('Processing: ' + doc);
-            data += doc.source + '\t' + doc.team + '\t' + doc.publishDate + '\t' +
+
+           console.log('Processing: ' + doc.title + ', Task time: ' + read(doc.taskTime));
+
+            if (!doc.title) {
+                return cb();
+            }
+
+            data += doc.source + '\t' + doc.team + '\t' + doc.publishDate + '\t' + doc.title + '\t' +
                 doc.torrents + '\t' + doc.downloads + '\t' + doc.finish + '\t' + read(doc.taskTime) + '\n';
-            cb();
+
+            if (i % 200 === 0) {
+
+                fs.appendFile('./exports_data.txt', data, function (err) {
+                    if (err) throw err;
+                    data = '';
+                    console.log('Data exporting step ' + i);
+                    i++;
+                    cb();
+                });
+
+            } else {
+
+                i++;
+                cb();
+
+            }
+
         }, function() {
-            fs.writeFile('./exports_data.txt', data, function (err) {
-                if (err) throw err;
-                console.log('Data exported.');
-                process.exit(0);
-            });
+            console.log('Data exported.');
+            process.exit(0);
         });
 
     });
