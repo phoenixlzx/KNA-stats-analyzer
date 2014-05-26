@@ -13,7 +13,7 @@ var fs = require('fs');
 
 var MongoClient = require('mongodb').MongoClient;
 
-var config = require('./config');
+var config = require('../config');
 
 var data = '# 数据来源\t字幕组\t发布日期\t标题\t种子\t下载\t完成\t抓取时间\n';
 
